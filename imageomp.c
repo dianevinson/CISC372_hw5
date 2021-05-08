@@ -79,7 +79,6 @@ void convolute(Image* srcImage,Image* destImage,Matrix algorithm){
       }
     }
   }
-  printf("My rank is %d, and I went from %d to %d\n", my_rank, local_start,true_end); 
 }
 
 //Usage: Prints usage information for the program
@@ -126,7 +125,6 @@ int main(int argc,char** argv){
     destImage.width=srcImage.width;
     destImage.data=malloc(sizeof(uint8_t)*destImage.width*destImage.bpp*destImage.height);
 
-    printf("address of source image is %d\n", &srcImage);
     //adding openmp parallelization pragma
     # pragma omp parallel
     convolute(&srcImage,&destImage,algorithms[type]);
