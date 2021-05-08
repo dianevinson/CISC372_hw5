@@ -92,6 +92,7 @@ void* convolute(void* arguments){
       }
     }
   }
+  free(arguments);
 }
 
 //Usage: Prints usage information for the program
