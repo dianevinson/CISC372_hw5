@@ -1,0 +1,9 @@
+Script started on 2021-05-08 12:51:53-04:00
+]0;dvinson@br012:~/CISC372_hw5[dvinson@r001 CISC372_hw5]$ ./imagep pic1.jpg edge
+Took 7 seconds
+]0;dvinson@br012:~/CISC372_hw5[dvinson@r001 CISC372_hw5]$ ./imagep pic1.jpg edge[1@o[1@m
+Took 7 seconds
+]0;dvinson@br012:~/CISC372_hw5[dvinson@r001 CISC372_hw5]$ exit
+exit
+
+Script done on 2021-05-08 12:52:26-04:00
