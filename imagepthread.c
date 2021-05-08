@@ -11,6 +11,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+//struct made to pass arguments into pthreads_create
 struct arg_struct {
   Image* source_image;
   Image* dest_image;
@@ -19,6 +20,7 @@ struct arg_struct {
   int num_threads;
 };
 
+//finds min of two ints
 int min(int a, int b) {
   if (a < b)
     return a;
@@ -77,25 +79,19 @@ void* convolute(void* arguments){
   Image* srcImage = args->source_image;
   Image* destImage = args->dest_image;
   long my_rank = args->rank;
-  //  printf("in convolute with rank %ld or %ld\n", my_rank, args->rank);
   int thread_count = args->thread_count;
   int row,pix,bit,span;
-  //int my_rank = omp_get_thread_num();
-  //int thread_count = omp_get_num_threads();
-  int local_start = (srcImage->height / thread_count) * my_rank;
-  int local_end = (srcImage->height / thread_count) * (my_rank+1) -1;
+  int local_start = (srcImage->height / thread_count) * my_rank + 1;
+  int local_end = (srcImage->height / thread_count) * (my_rank+1);
   int true_end = min(local_end, srcImage->height);
   span=srcImage->bpp*srcImage->bpp;
-  printf("Thread number: %ld, local_start: %d, local_end: %d, source image: %p, dest image: %p\n", my_rank,local_start,true_end,srcImage, destImage);
-  for (row=local_start;row< true_end;row++){
+  for (row=local_start;row<= true_end;row++){
     for (pix=0;pix<srcImage->width;pix++){
       for (bit=0;bit<srcImage->bpp;bit++){
 	destImage->data[Index(pix,row,srcImage->width,bit,srcImage->bpp)]=getPixelValue(srcImage,pix,row,bit,algorithms[args->type]);
       }
     }
   }
-  printf("Thread number %ld went from %d to %d\n", my_rank, local_start, true_end);
-  
 }
 
 //Usage: Prints usage information for the program
@@ -121,7 +117,7 @@ enum KernelTypes GetKernelType(char* type){
 //argv is expected to take 2 arguments.  First is the source file name (can be jpg, png, bmp, tga).  Second is the lower case name of the algorithm.
 int main(int argc,char** argv){
     long t1,t2;
-    int num_threads = 4;
+    int num_threads = 10;
     t1=time(NULL);
 
     stbi_set_flip_vertically_on_load(0); 
@@ -144,7 +140,6 @@ int main(int argc,char** argv){
     destImage.data=malloc(sizeof(uint8_t)*destImage.width*destImage.bpp*destImage.height);
 
     //adding pthreads
-    //long thread;
     pthread_t* thread_handles;
     thread_handles = (pthread_t*)malloc(num_threads*sizeof(pthread_t));
     for (long thread = 0; thread<num_threads;thread++) {
@@ -154,26 +149,14 @@ int main(int argc,char** argv){
       args->type = type;
       args->rank = thread;
       args->num_threads = num_threads;
-      /*args.source_image = &srcImage;
-      args.dest_image = &destImage;
-      args.type = type;
-      args.rank = thread;
-      args.num_threads = num_threads;*/
-      //printf("before creating thread args.rank is %ld\n", args.rank);
       pthread_create(&thread_handles[thread],NULL, &convolute,args);
-      printf("just created thread number %ld, aka %ld. args->srcImage points to %p, and the address of args is %p\n", thread, args->rank, args->source_image, args);
-      //printf("created args at %p\n", args);
     }							    
     
-    //convolute(&srcImage,&destImage,algorithms[type]);
-
-
     stbi_write_png("output.png",destImage.width,destImage.height,destImage.bpp,destImage.data,destImage.bpp*destImage.width);
     stbi_image_free(srcImage.data);
 
     for (long thread = 0; thread<num_threads;thread++) {
       pthread_join(thread_handles[thread], NULL);
-      printf("thread number %ld just joined\n", thread);
     }
 
     free(thread_handles);    
